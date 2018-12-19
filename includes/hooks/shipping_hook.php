@@ -5,13 +5,37 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
     if (get_option('wc_general_settings_matdespatch_pricing_enable') == 'yes') {
       add_action('woocommerce_shipping_init', 'ShippingInit');
       add_filter('woocommerce_shipping_methods', 'AddShippingMethod');
+      add_action('woocommerce_add_to_cart', 'Test_');
+    }
+
+    function Test_() {
+      //add_action('woocommerce_update_options_shipping_degil_tak_mau_jalan', array($this, 'process_admin_options'));
+      // Get cURL resource
+      $curl = curl_init();
+      // Set some options - we are passing in a useragent too here
+      curl_setopt_array($curl, array(
+          CURLOPT_RETURNTRANSFER => 1,
+          CURLOPT_URL => 'https://api.dev.matdespatch.app',
+          CURLOPT_USERAGENT => 'Codular Sample cURL Request'
+      ));
+      // Send the request & save response to $resp
+      $resp = curl_exec($curl);
+      // Close request to clear up some resources
+      curl_close($curl);
+    }
+    
+    if (class_exists('MatDespatchShippingMethod')) {
+    $t = new MatDespatchShippingMethod();
+    $t->init();
     }
 
     function ShippingInit()
     {
         if (!class_exists('MatDespatchShippingMethod')) {
+
             class MatDespatchShippingMethod extends WC_Shipping_Method
             {
+              
                 /**
                  * Constructor for your shipping class.
                  */
@@ -40,19 +64,23 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                 public function init_form_fields()
                 {
                     $this->form_fields = array(
-                        'title1' => array(
-                            'title' => __( 'Integration Settings', 'matdespatch' ),
-                            'type' => 'title',
-                            'description' => __('Login to <a href="https://app.matdespatch.com/" target="_blank">Matdespatch.com</a>, then click on Profile to get these settings.', 'matdespatch'),
-                            'id' => 'wc_settings_matdespatch_integration'
+                        'title0' => array(
+                          'title' => __( 'Account Details', 'matdespatch' ),
+                          'type' => 'title',
+                          'description' => __('Matdespatch account details', 'matdespatch'),
+                          'id' => 'matdespatch_account_details'
                         ),
-                        'UserID' => array(
-                            'title' => __('User ID', 'matdespatch'),
+                        'AccountBalance' => array(
+                            'title' => __('Account Balance', 'matdespatch'),
                             'type' => 'text',
+                            'id' => 'matdespatch_account_balance',
+                            'custom_attributes' => array('readonly' => 'readonly')
                         ),
-                        'ApiKey' => array(
-                            'title' => __('Api Key', 'matdespatch'),
-                            'type' => 'text',
+                        'MatdespatchAccount' => array(
+                          'title' => __('Matdespatch.com Account', 'matdespatch'),
+                          'type' => 'text',
+                          'id' => 'matdespatch_account',
+                          'custom_attributes' => array('readonly' => 'readonly')
                         ),
                         'title2' => array(
                             'title' => __( 'Sender / Pickup Information', 'matdespatch' ),
@@ -132,7 +160,19 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                                 '24:00' => '24:00',
                             ), // array of options for select/multiselects only
                         ),
-                        'title4' => array(
+                        'Fulfilment' => array(
+                          'title' => __( 'Fulfillment Settings', 'matdespatch' ),
+                          'type' => 'title',
+                          'id' => 'matdespatch_fulfillment',
+                        ),
+                        'Automatic' => array(
+                            'title' => __('Automatic Fulfillment', 'matdespatch'),
+                            'id'       	=> 'matdespatch_automatic_fulfillment',
+                            'desc'  	=> __( 'Enable or disable automatic fulfillment', 'matdespatch' ),
+                            'type'     	=> 'checkbox',
+                            'default'	=> 'yes',
+                        ),
+                        'title5' => array(
                             'title' => __( 'Shipping Rate Adjustments', 'matdespatch' ),
                             'type' => 'title',
                             'id' => 'wc_settings_matdespatch_shipping_rate_adjustment',
@@ -225,7 +265,7 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                     curl_setopt($ch, CURLOPT_HTTPHEADER, array(
                         'Content-Type: application/json',
                     ));
-                    curl_setopt($ch, CURLOPT_USERPWD, $this->settings['UserID'].':'.$this->settings['ApiKey']);
+                    curl_setopt($ch, CURLOPT_USERPWD, get_option('matdespatch_id').':'.get_option('matdespatch_api'));
                     $results = curl_exec($ch);
                     curl_close($ch);
                     $results = json_decode($results, true);
@@ -253,8 +293,6 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
     }
     function AddShippingMethod($methods)
     {
-          $lol = WC_Admin_Settings::get_option('wc_settings_matdespatch_sender');
-        //return WC_Admin_Notices::add_custom_notice('set_region', $methods['your_shipping_method']);
         $methods['your_shipping_method'] = 'MatDespatchShippingMethod';
 
         return $methods;
