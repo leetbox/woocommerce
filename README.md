@@ -1,3 +1,3 @@
-# wp-matdespatch
+# wp-delyva
 
-Matdespatch woocommerce plugin
+Delyva woocommerce plugin
