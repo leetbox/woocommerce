@@ -5,30 +5,30 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
     add_action('woocommerce_shipping_init', 'ShippingInit');
     add_filter('woocommerce_shipping_methods', 'AddShippingMethod');
 
-    if (class_exists('MatDespatchShippingMethod')) {
-	    $t = new MatDespatchShippingMethod();
+    if (class_exists('DelyvaShippingMethod')) {
+	    $t = new DelyvaShippingMethod();
     	$t->init();
     }
 
     function ShippingInit() {
-        if (!class_exists('MatDespatchShippingMethod')) {   
+        if (!class_exists('DelyvaShippingMethod')) {
 
-            class MatDespatchShippingMethod extends WC_Shipping_Method {
+            class DelyvaShippingMethod extends WC_Shipping_Method {
 
                 /**
                  * Constructor for your shipping class.
                  */
                 public function __construct() {
-                    $this->id = 'matdespatch'; // Id for your shipping method. Should be uunique.
-                    $this->method_title = __('Matdespatch.com', 'matdespatch');  // Title shown in admin
-                    if (get_option('matdespatch_integration_id')) {
-                        $this->method_description = __('Matdespatch account : ' . get_option('matdespatch_integration_id') . '<br />Log in to Matdespatch.com to configure fulfillment settings.', 'matdespatch');
+                    $this->id = 'delyva'; // Id for your shipping method. Should be uunique.
+                    $this->method_title = __('Delyva.com', 'delyva');  // Title shown in admin
+                    if (get_option('delyva_integration_id')) {
+                        $this->method_description = __('Delyva account : ' . get_option('delyva_integration_id') . '<br />Log in to Delyva.com to configure fulfillment settings.', 'delyva');
                     } else {
-                        $this->method_description = __('<h3 style="color:red"><b>NOTICE!</b> This app is not configured! Please log in to Matdespatch.com then navigate to "Integration > Setup"</h3>', 'matdespatch');
+                        $this->method_description = __('<h3 style="color:red"><b>NOTICE!</b> This app is not configured! Please log in to Delyva.com then navigate to "Integration > Setup"</h3>', 'delyva');
                     }
                     $this->init();
                     $this->enabled = isset($this->settings['enabled']) ? $this->settings['enabled'] : 'yes';
-                    $this->title = isset($this->settings['title']) ? $this->settings['title'] : __('Matdespatch.com Settings', 'matdespatch');
+                    $this->title = isset($this->settings['title']) ? $this->settings['title'] : __('Delyva.com Settings', 'delyva');
                 }
 
                 /**
@@ -36,36 +36,36 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                  */
                 public function init() {
                     // Load the settings API
-                    $this->init_matdespatch_form_fields(); // This is part of the settings API. Override the method to add your own settings
+                    $this->init_delyva_form_fields(); // This is part of the settings API. Override the method to add your own settings
                     $this->init_settings(); // This is part of the settings API. Loads settings you previously init.
 
                     // Save settings in admin if you have any defined
                     add_action('woocommerce_update_options_shipping_'.$this->id, array($this, 'process_admin_options'));
                 }
 
-                public function init_matdespatch_form_fields() {
+                public function init_delyva_form_fields() {
                     $this->form_fields = array(
                         'title5' => array(
-                            'title' => __( 'Shipping Rate Adjustments', 'matdespatch' ),
+                            'title' => __( 'Shipping Rate Adjustments', 'delyva' ),
                             'type' => 'title',
-                            'id' => 'wc_settings_matdespatch_shipping_rate_adjustment',
+                            'id' => 'wc_settings_delyva_shipping_rate_adjustment',
                             'description' => __( 'Formula, shipping cost = shipping price + % rate + flat rate' ),
                         ),
                         'PercentageRate' => array(
-                            'title' => __('Percentage Rate %', 'matdespatch'),
+                            'title' => __('Percentage Rate %', 'delyva'),
                             'type' => 'text',
-                            'default' => __('0', 'matdespatch'),
-                            'id' => 'matdespatch_rate_adjustment_percentage'
+                            'default' => __('0', 'delyva'),
+                            'id' => 'delyva_rate_adjustment_percentage'
                         ),
                         'FlatRate' => array(
-                            'title' => __('Flat Rate', 'matdespatch'),
+                            'title' => __('Flat Rate', 'delyva'),
                             'type' => 'text',
-                            'default' => __('0', 'matdespatch'),
-                            'id' => 'matdespatch_rate_adjustment_flat'
+                            'default' => __('0', 'delyva'),
+                            'id' => 'delyva_rate_adjustment_flat'
                         ),
                     );
                 }
-                
+
                 /**
                  * calculate_shipping function.
                  *
@@ -73,9 +73,9 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                  */
                 public function calculate_shipping($package)
                 {
-                    if (get_option('wc_general_settings_matdespatch_pricing_enable') == 'yes') {
+                    if (get_option('wc_general_settings_delyva_pricing_enable') == 'yes') {
                         global $woocommerce;
-                        
+
                         $Grams = 0;
                         switch (get_option('woocommerce_weight_unit')) {
                             case 'kg':
@@ -100,7 +100,7 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                         }
 
                         $ch = curl_init();
-                        curl_setopt($ch, CURLOPT_URL, MATDESPATCH_API_ENDPOINT . '/api/integration/woocommerce/getRates/' . get_option('matdespatch_integration_id'));
+                        curl_setopt($ch, CURLOPT_URL, DELYVA_API_ENDPOINT . '/api/integration/woocommerce/getRates/' . get_option('delyva_integration_id'));
                         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
                         curl_setopt($ch, CURLOPT_HEADER, false);
                         curl_setopt($ch, CURLOPT_POST, true);
@@ -116,11 +116,11 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                         $results = curl_exec($ch);
                         curl_close($ch);
                         $results = json_decode($results, true);
-                        
+
                         foreach ($results as $shipper) {
                             if (isset($shipper['service_name'])) {
-                                $percentRate = get_options('matdespatch_rate_adjustment_percentage', 1) / 100 * $shipper['total_price'];
-                                $flatRate = get_options('matdespatch_rate_adjustment_flat', 0);
+                                $percentRate = get_options('delyva_rate_adjustment_percentage', 1) / 100 * $shipper['total_price'];
+                                $flatRate = get_options('delyva_rate_adjustment_flat', 0);
 
                                 $rate = array(
                                     'id' => $shipper['service_code'],
@@ -143,18 +143,18 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
     }
 
     function AddShippingMethod($methods) {
-        $methods['your_shipping_method'] = 'MatDespatchShippingMethod';
+        $methods['your_shipping_method'] = 'DelyvaShippingMethod';
         return $methods;
     }
 
     function getIntegrationSettings() {
         $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, MATDESPATCH_API_ENDPOINT . '/api/integration/get/' . get_option('matdespatch_integration_id'));
+        curl_setopt($ch, CURLOPT_URL, DELYVA_API_ENDPOINT . '/api/integration/get/' . get_option('delyva_integration_id'));
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_HEADER, false);
         curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-            'id: ' . get_option('matdespatch_user_id'),
-            'session: ' . get_option('matdespatch_api_key')
+            'id: ' . get_option('delyva_user_id'),
+            'session: ' . get_option('delyva_api_key')
         ));
         $results = curl_exec($ch);
         curl_close($ch);
