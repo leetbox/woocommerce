@@ -7,8 +7,8 @@ add_action( 'woocommerce_order_status_completed', 'GetTrackingCode');
 function AddBox() {
 
 	add_meta_box (
-	    'MatDespatchTrackingMetaBox',
-	    'Matdespatch.com',
+	    'DelyvaTrackingMetaBox',
+	    'Delyva.com',
 	    'ShowBox',
 	    'shop_order',
 	    'side',
@@ -22,10 +22,10 @@ function ShowBox( $post ) {
 
     if ($TrackingCode == 'Service Unavailable') {
         echo "<div><p>
-        Failed to create shipment in Matdespatch.com, you can try again by changing order status to <b>Processing</b></p></div>";
+        Failed to create shipment in Delyva.com, you can try again by changing order status to <b>Processing</b></p></div>";
     } else if ( $order->has_status( array( 'processing' ) ) ) {
         echo "<div><p>
-            <a href=\"".wp_nonce_url( admin_url( 'admin-ajax.php?action=woocommerce_mark_order_status&status=completed&order_id=' . $order->get_id() ), 'woocommerce-mark-order-status' )."\" class=\"button button-primary\">Fulfill with Matdespatch.com</a>
+            <a href=\"".wp_nonce_url( admin_url( 'admin-ajax.php?action=woocommerce_mark_order_status&status=completed&order_id=' . $order->get_id() ), 'woocommerce-mark-order-status' )."\" class=\"button button-primary\">Fulfill with Delyva.com</a>
             </p></div>";
     } else if ( $order->has_status( array( 'completed' ) ) ) {
         echo "<div>
@@ -38,7 +38,7 @@ function ShowBox( $post ) {
     } else {
         echo "<div>
         <p>
-            Set your order to <b>Processing</b> to fulfill with Matdespatch.com. You can also set status to \"Completed\" to fulfill the shipment, it works with <i>bulk actions</i> too!
+            Set your order to <b>Processing</b> to fulfill with Delyva.com. You can also set status to \"Completed\" to fulfill the shipment, it works with <i>bulk actions</i> too!
         </p>
     </div>";
     }
@@ -61,7 +61,7 @@ function GetTrackingCode( $order_id ) {
     $order = wc_get_order ( $order_id );
 	if ( $order ) {
 		global $wpdb;
-		$TableName = $wpdb->prefix . "matdespatch";
+		$TableName = $wpdb->prefix . "delyva";
         $result = $wpdb->get_results("SELECT * FROM $TableName WHERE id = 1");
         if (isset($result[0]))
             $Shop = $result[0];
@@ -85,7 +85,7 @@ t1.order_item_id = t2.order_item_id")[0]->Service;
 }
 
 function GetFromAPI($Shop,$service,$Customer, $order){
-    $free_shipping = get_option( 'woocommerce_matdespatch_settings' );
+    $free_shipping = get_option( 'woocommerce_delyva_settings' );
     global $woocommerce;
 
     $item_names = [];
@@ -149,7 +149,7 @@ function GetFromAPI($Shop,$service,$Customer, $order){
     }
 
     $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, MATDESPATCH_SHIPMENT);
+    curl_setopt($ch, CURLOPT_URL, DELYVA_SHIPMENT);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
     curl_setopt($ch, CURLOPT_HEADER, FALSE);
     curl_setopt($ch, CURLOPT_POST, TRUE);
